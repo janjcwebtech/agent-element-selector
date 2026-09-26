@@ -29,6 +29,38 @@
 
   const MODIFIER_FLAG = { Alt: 'altKey', Control: 'ctrlKey', Meta: 'metaKey', Shift: 'shiftKey' };
   const heldNow = (e) => !!e[MODIFIER_FLAG[settings.modifier] || 'altKey'];
+  // Adding this key to the modifier upgrades the copy from the inline reference to full context.
+  const fullKey = () => (settings.modifier === 'Shift' ? 'Alt' : 'Shift');
+  const fullNow = (e) => !!e[MODIFIER_FLAG[fullKey()]];
+  const KEY_GLYPH = { Alt: '⌥', Control: '⌃', Meta: '⌘', Shift: '⇧' };
+
+  /* ------------------------------------------------------------- environment */
+
+  // The UA string freezes macOS at 10_15_7 and Windows at NT 10.0, so it's only the fallback;
+  // UA Client Hints give the real versions but resolve async — fetch once up front.
+  function envFromUA(ua) {
+    const b = ua.match(/(Edg|OPR|Firefox|Chrome)\/([\d.]+)/);
+    const safari = !b && ua.match(/Version\/([\d.]+).*Safari/);
+    const browser = b ? `${{ Edg: 'Microsoft Edge', OPR: 'Opera' }[b[1]] || b[1]} ${b[2]}` : safari ? `Safari ${safari[1]}` : null;
+    const o = ua.match(/(Mac OS X|Windows NT|Android|CrOS|iPhone OS|Linux)[ _]?([\d._]*)/);
+    const os = o ? `${{ 'Mac OS X': 'macOS', 'Windows NT': 'Windows', CrOS: 'ChromeOS', 'iPhone OS': 'iOS' }[o[1]] || o[1]} ${o[2].replace(/_/g, '.')}`.trim() : null;
+    return { browser, os };
+  }
+
+  function envFromClientHints(h) {
+    const brands = (h.fullVersionList || h.brands || []).filter((x) => !/^not.a.brand$/i.test(x.brand));
+    const b = brands.find((x) => x.brand !== 'Chromium') || brands[0];
+    let ver = h.platformVersion || '';
+    if (h.platform === 'Windows') ver = parseInt(ver, 10) >= 13 ? '11' : parseInt(ver, 10) > 0 ? '10' : '';
+    return { browser: b ? `${b.brand} ${b.version}` : null, os: h.platform ? `${h.platform} ${ver}`.trim() : null };
+  }
+
+  let env = envFromUA(navigator.userAgent);
+  try {
+    navigator.userAgentData?.getHighEntropyValues(['platformVersion', 'fullVersionList'])
+      .then((h) => { const hinted = envFromClientHints(h); env = { browser: hinted.browser || env.browser, os: hinted.os || env.os }; })
+      .catch(() => {});
+  } catch (_) { /* client hints unavailable */ }
 
   /* ------------------------------------------------------------------- utils */
 
@@ -77,7 +109,7 @@
   }
 
   function openTag(el) {
-    const attrs = Array.from(el.attributes).map((a) => `${a.name}="${esc(trunc(a.value, 140))}"`);
+    const attrs = Array.from(el.attributes).filter((a) => !a.name.startsWith('data-atx-')).map((a) => `${a.name}="${esc(trunc(a.value, 140))}"`);
     const oneLine = `<${el.tagName.toLowerCase()}${attrs.length ? ' ' + attrs.join(' ') : ''}>`;
     if (oneLine.length <= 110) return oneLine;
     return `<${el.tagName.toLowerCase()}\n  ${attrs.join('\n  ')}\n>`;
@@ -108,6 +140,11 @@
       out.nearestLoc = near.getAttribute('data-astro-source-loc');
       out.nearestEl = shortLabel(near);
     }
+    // Astrogeus stamps every rendered element with its own file + line:col, not just component roots.
+    const atx = el.closest('[data-atx-file]');
+    if (atx) {
+      out.atx = { file: atx.getAttribute('data-atx-file'), loc: atx.getAttribute('data-atx-loc'), on: atx === el ? null : shortLabel(atx) };
+    }
     const island = el.closest('astro-island');
     if (island) {
       out.island = {
@@ -122,7 +159,7 @@
     }
     const slot = el.closest('astro-slot, astro-static-slot');
     if (slot) out.slot = slot.tagName.toLowerCase() + (slot.getAttribute('name') ? ` name="${slot.getAttribute('name')}"` : '');
-    if (document.querySelector('astro-dev-toolbar, astro-island, [data-astro-cid], [data-astro-source-file]')) out.detected = true;
+    if (document.querySelector('astro-dev-toolbar, astro-island, [data-astro-cid], [data-astro-source-file], [data-atx-file]')) out.detected = true;
     return Object.keys(out).length ? out : null;
   }
 
@@ -321,6 +358,7 @@
       title: document.title,
       when: new Date().toISOString(),
       dev: isDevServer(),
+      env,
       tag: el.tagName.toLowerCase(),
       id: el.id || null,
       classes: cls,
@@ -349,7 +387,8 @@
           label: shortLabel(node),
           size: `${Math.round(r.width)}×${Math.round(r.height)}`,
           role: node.getAttribute('role') || IMPLICIT_ROLE[node.tagName.toLowerCase()] || null,
-          astro: node.getAttribute('data-astro-source-file') || null,
+          astro: node.getAttribute('data-astro-source-file')
+            || (node.hasAttribute('data-atx-file') ? `${node.getAttribute('data-atx-file')}:${node.getAttribute('data-atx-loc')}` : null),
         });
         node = node.parentElement;
         n++;
@@ -359,7 +398,22 @@
     return data;
   }
 
+  // Just enough to single the element out: tag#id.classes, plus an XPath unless the id is unique.
+  function collectMinimal(el) {
+    let label = el.tagName.toLowerCase();
+    if (el.id) label += '#' + el.id;
+    const cls = selectorClasses(el).slice(0, 3);
+    if (cls.length) label += '.' + cls.join('.');
+    let uniqueId = false;
+    try { uniqueId = !!el.id && document.querySelectorAll('#' + CSS.escape(el.id)).length === 1; } catch (_) { /* odd id */ }
+    return { label, xpath: uniqueId ? null : xPath(el) };
+  }
+
   /* --------------------------------------------------------------- formatting */
+
+  function toInline(d) {
+    return `[${d.label}${d.xpath ? ' · ' + d.xpath : ''}]`;
+  }
 
   function toMarkdown(d) {
     const L = [];
@@ -371,6 +425,7 @@
     L.push(`- **URL:** ${d.url}`);
     L.push(`- **Page title:** ${d.title}`);
     L.push(`- **Captured:** ${d.when}${d.dev ? ' (dev server)' : ''}`);
+    if (d.env.browser || d.env.os) L.push(`- **Browser / OS:** ${[d.env.browser, d.env.os].filter(Boolean).join(' · ')}`);
     if (d.inFrame) L.push(`- **Note:** element lives inside an iframe`);
     L.push('');
 
@@ -379,9 +434,10 @@
       L.push('## Source');
       if (fw.astro) {
         const a = fw.astro;
+        if (a.atx) L.push(`- **Astrogeus source${a.atx.on ? ` (nearest ancestor \`${a.atx.on}\`)` : ' (this element)'}:** \`${a.atx.file}${a.atx.loc ? ':' + a.atx.loc : ''}\``);
         if (a.ownFile) L.push(`- **Astro source (this element):** \`${a.ownFile}${a.ownLoc ? ':' + a.ownLoc : ''}\``);
         if (a.nearestFile) L.push(`- **Astro source (nearest ancestor \`${a.nearestEl}\`):** \`${a.nearestFile}${a.nearestLoc ? ':' + a.nearestLoc : ''}\``);
-        if (!a.ownFile && !a.nearestFile && a.detected) {
+        if (!a.ownFile && !a.nearestFile && !a.atx && a.detected) {
           L.push('- **Astro detected**, but no `data-astro-source-file` on this subtree (build output, or dev toolbar disabled).');
         }
         if (a.island) {
@@ -478,6 +534,9 @@
           white-space: nowrap; max-width: 60vw; overflow: hidden; text-overflow: ellipsis;
           box-shadow: 0 1px 4px rgba(0,0,0,.3);
         }
+        .badge.full { background: #8a4fff; }
+        /* system font: Menlo has no ⇧/⌥ glyphs and the fallback renders small and off-baseline */
+        .badge .hint { font: 500 11px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; opacity: .85; }
         .toast {
           position: fixed; right: 16px; bottom: 16px; pointer-events: none;
           font: 500 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -498,6 +557,8 @@
     (document.body || document.documentElement).appendChild(host);
   }
 
+  let fullMode = false;
+
   function highlight(el) {
     ensureOverlay();
     const r = el.getBoundingClientRect();
@@ -507,7 +568,11 @@
     box.style.width = r.width + 'px';
     box.style.height = r.height + 'px';
     badge.style.display = 'block';
-    badge.textContent = `${shortLabel(el)} · ${Math.round(r.width)}×${Math.round(r.height)}`;
+    const hint = document.createElement('span');
+    hint.className = 'hint';
+    hint.textContent = fullMode ? 'full context' : `hold ${KEY_GLYPH[fullKey()]} for full context`;
+    badge.replaceChildren(`${shortLabel(el)} · ${Math.round(r.width)}×${Math.round(r.height)} · `, hint);
+    badge.classList.toggle('full', fullMode);
     const above = r.top > 22;
     badge.style.left = Math.max(2, r.left) + 'px';
     badge.style.top = (above ? r.top - 20 : Math.min(r.bottom + 4, window.innerHeight - 22)) + 'px';
@@ -588,20 +653,22 @@
 
   /* ------------------------------------------------------------------- events */
 
-  async function doCopy(el) {
+  async function doCopy(el, full) {
     let data, md;
     try {
-      data = collect(el);
-      md = toMarkdown(data);
+      data = full ? collect(el) : collectMinimal(el);
+      md = full ? toMarkdown(data) : toInline(data);
     } catch (err) {
       showToast('Could not read that element', String(err && err.message || err), true);
       return;
     }
     const ok = await copyText(md);
-    if (ok) {
+    if (ok && !full) {
+      showToast('Copied minimal context', md);
+    } else if (ok) {
       const kb = (new Blob([md]).size / 1024).toFixed(1);
-      const src = data.framework?.astro?.ownFile || data.framework?.astro?.nearestFile;
-      showToast('Copied element context', `${shortLabel(el)} · ${kb} KB${src ? ' · ' + src.split('/').slice(-2).join('/') : ''}`);
+      const src = data.framework?.astro?.atx?.file || data.framework?.astro?.ownFile || data.framework?.astro?.nearestFile;
+      showToast('Copied full context', `${shortLabel(el)} · ${kb} KB${src ? ' · ' + src.split('/').slice(-2).join('/') : ''}`);
     } else {
       showToast('Copy failed — click the page once, then retry', 'The document needs focus for clipboard access', true);
     }
@@ -611,11 +678,19 @@
     if (!settings.enabled) return;
     if (e.key === 'Escape' && armed) { disarm(); return; }
     if (e.key === settings.modifier || heldNow(e)) arm();
+    setFullMode(fullNow(e));
   }, true);
 
   window.addEventListener('keyup', (e) => {
     if (e.key === settings.modifier || !heldNow(e)) disarm();
+    setFullMode(fullNow(e));
   }, true);
+
+  function setFullMode(on) {
+    if (on === fullMode) return;
+    fullMode = on;
+    if (armed && current) highlight(current);
+  }
 
   window.addEventListener('blur', disarm, true);
   document.addEventListener('visibilitychange', () => { if (document.hidden) disarm(); });
@@ -623,6 +698,7 @@
   window.addEventListener('mousemove', (e) => {
     lastPoint = { x: e.clientX, y: e.clientY };
     if (!settings.enabled) return;
+    fullMode = fullNow(e);
     if (heldNow(e)) {
       if (!armed) arm();
       const el = elementAt(e.clientX, e.clientY);
@@ -646,7 +722,7 @@
     if (!armed || e.button !== 0) return;
     const el = elementAt(e.clientX, e.clientY);
     if (!swallow(e)) return;
-    if (el) doCopy(el);
+    if (el) doCopy(el, fullNow(e));
   }, true);
 
   for (const type of ['mouseup', 'click', 'dblclick', 'auxclick', 'dragstart', 'contextmenu']) {

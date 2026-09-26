@@ -24,6 +24,12 @@ function write(id, value) {
   else el.value = value;
 }
 
+// Mirrors fullKey() in content.js: Shift upgrades to full context, unless Shift is the modifier.
+function showKeys(modifier) {
+  $('keyName').textContent = KEY_LABEL[modifier] || modifier;
+  $('fullKeyName').textContent = KEY_LABEL[modifier === 'Shift' ? 'Alt' : 'Shift'];
+}
+
 let statusTimer = null;
 function flash(text) {
   $('status').textContent = text;
@@ -34,13 +40,13 @@ function flash(text) {
 chrome.storage.sync.get(DEFAULTS, (stored) => {
   const s = { ...DEFAULTS, ...stored };
   FIELDS.forEach((f) => write(f, s[f]));
-  $('keyName').textContent = KEY_LABEL[s.modifier] || s.modifier;
+  showKeys(s.modifier);
 });
 
 FIELDS.forEach((f) => {
   $(f).addEventListener('change', () => {
     const value = read(f);
     chrome.storage.sync.set({ [f]: value }, () => flash('Saved'));
-    if (f === 'modifier') $('keyName').textContent = KEY_LABEL[value] || value;
+    if (f === 'modifier') showKeys(value);
   });
 });

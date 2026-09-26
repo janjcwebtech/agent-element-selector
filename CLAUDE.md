@@ -1,7 +1,8 @@
 # CLAUDE.md — Agent Element Selector
 
-Personal Chrome MV3 extension. Hold ⌥, hover, click → the element's identity and locators land on
-the clipboard as Markdown, for pasting into a chat with a coding agent.
+Personal Chrome MV3 extension. Hold ⌥, hover, click → an inline reference like
+`[h1.hero__title · //body/main/section/h1]` lands on the clipboard, for dropping mid-sentence into a
+prompt. Add ⇧ (⌥⇧-click) for full Markdown context: source, locators, box, ancestors.
 
 ## Ground rules
 
@@ -28,16 +29,20 @@ whole point is that `chrome://extensions` → *Load unpacked* works on the raw f
 | `popup.html` / `popup.js` | Settings UI, backed by `chrome.storage.sync`. |
 | `test/fixture.html` | Local page with Astro-style source attrs, a flex hero, a grid list. |
 
-`content.js` reads top-to-bottom in labelled sections: **settings → utils → framework/source
+`content.js` reads top-to-bottom in labelled sections: **settings → environment → utils → framework/source
 metadata → element-specific bits → locators → collection → formatting → overlay → clipboard →
-arm/disarm → events**. `collect(el)` builds a plain data object; `toMarkdown(d)` is the only place
-that decides what the user sees. Add a new field in `collect`, render it in `toMarkdown` — don't
+arm/disarm → events**. `collect(el)` / `collectMinimal(el)` build plain data objects; `toMarkdown(d)` /
+`toInline(d)` are the only places that decide what the user sees. Add a new field in `collect`, render it in `toMarkdown` — don't
 format inside the collectors.
 
 ## Things that will bite you
 
 - **Settings keys live in three places** and must match exactly: `DEFAULTS` in `content.js`,
   `DEFAULTS` in `popup.js`, and the element `id`s in `popup.html` (the id *is* the storage key).
+- **The inline reference is minimal on purpose** — tag#id + ≤3 selector-safe classes, plus an XPath
+  only when the id isn't unique. Anything more belongs in the ⇧ full context, not the prompt.
+- **The full-context key is ⇧, or ⌥ when the modifier setting is Shift** — `fullKey()` in `content.js`
+  and `showKeys()` in `popup.js` must agree.
 - **Every `chrome.*` access is wrapped in try/catch.** That's not defensive noise — it lets
   `content.js` be injected as a plain `<script>` for testing, where `chrome` is undefined.
 - **All listeners are capture-phase.** While armed, `mousedown`/`mouseup`/`click`/`dblclick`/
@@ -47,6 +52,10 @@ format inside the collectors.
 - **`REAL_NAME` (`/^[A-Z][A-Za-z0-9]{2,}$/`) guards React and Vue component names.** Without it a
   production bundle reports `React component: j`. A name is only emitted if it passes that test or
   comes with a `_debugSource` file:line.
+- **Astrogeus `data-atx-file` / `data-atx-loc` beat Astro's own source attrs** — they're on every
+  element, not just component roots. The other `data-atx-*` attrs are stripped from `openTag` as noise.
+- **Browser / OS comes from UA Client Hints**, fetched async at load; the UA string (frozen at macOS
+  10.15.7 / Windows NT 10.0) is only the fallback.
 - **Astro source attributes only exist under `astro dev`.** `toMarkdown` says so explicitly when it
   detects Astro but finds no `data-astro-source-file`. Don't "fix" that message.
 - `cssPath` returns as soon as the path is unique, so it's usually 1–3 segments, not a full chain.

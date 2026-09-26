@@ -21,7 +21,8 @@
 </head>
 <body>
   <h1>Agent Element Selector</h1>
-  <p class="hint">Hold <kbd id="keyName">⌥ Option</kbd>, hover, click to copy. <kbd>Esc</kbd> cancels.</p>
+  <p class="hint">Hold <kbd id="keyName">⌥ Option</kbd>, hover, click to copy an inline reference.
+    Add <kbd id="fullKeyName">⇧ Shift</kbd> for full context. <kbd>Esc</kbd> cancels.</p>
 
   <label><input type="checkbox" id="enabled"><span>Enabled</span></label>
 
@@ -36,6 +37,7 @@
     </select>
   </label>
 
+  <p class="hint">Full context:</p>
   <label><input type="checkbox" id="includeAncestors"><span>Include ancestor chain</span></label>
   <label><input type="checkbox" id="includeText"><span>Include text content</span></label>
 

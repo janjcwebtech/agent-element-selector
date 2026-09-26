@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Agent Element Selector",
-  "version": "1.0.0",
-  "description": "Hold Option and click any element to copy its selector, XPath, Playwright locators, position and framework/Astro source metadata to the clipboard as agent-ready Markdown.",
+  "version": "1.1.0",
+  "description": "Hold Option and click any element to copy a short inline reference for your prompt; add Shift for full agent-ready context — locators, position and framework/Astro source.",
   "permissions": [
     "storage",
     "clipboardWrite"
