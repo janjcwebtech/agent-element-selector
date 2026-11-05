@@ -1,9 +1,8 @@
 const DEFAULTS = {
   enabled: true,
   modifier: 'Alt',
+  includeUrl: true,
   includeAncestors: true,
-  includeText: true,
-  textLimit: 500,
   ancestorDepth: 5,
 };
 
@@ -24,7 +23,7 @@ function write(id, value) {
   else el.value = value;
 }
 
-// Mirrors fullKey() in content.js: Shift upgrades to full context, unless Shift is the modifier.
+// Mirrors fullKey() in content.js: Shift opens the menu, unless Shift is the modifier.
 function showKeys(modifier) {
   $('keyName').textContent = KEY_LABEL[modifier] || modifier;
   $('fullKeyName').textContent = KEY_LABEL[modifier === 'Shift' ? 'Alt' : 'Shift'];

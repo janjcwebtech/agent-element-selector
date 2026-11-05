@@ -21,8 +21,10 @@
 </head>
 <body>
   <h1>Agent Element Selector</h1>
-  <p class="hint">Hold <kbd id="keyName">⌥ Option</kbd>, hover, click to copy an inline reference.
-    Add <kbd id="fullKeyName">⇧ Shift</kbd> for full context. <kbd>Esc</kbd> cancels.</p>
+  <p class="hint">Hold <kbd id="keyName">⌥ Option</kbd>, hover, click to copy a reference with the page URL.
+    Press <kbd id="fullKeyName">⇧ Shift</kbd> while holding for a menu: a class or the component, on this page
+    or sitewide, or full context.
+    <kbd>Esc</kbd> cancels.</p>
 
   <label><input type="checkbox" id="enabled"><span>Enabled</span></label>
 
@@ -37,11 +39,10 @@
     </select>
   </label>
 
+  <label><input type="checkbox" id="includeUrl"><span>Include page URL</span></label>
+
   <p class="hint">Full context:</p>
   <label><input type="checkbox" id="includeAncestors"><span>Include ancestor chain</span></label>
-  <label><input type="checkbox" id="includeText"><span>Include text content</span></label>
-
-  <label><span>Text limit (chars)</span><input type="number" id="textLimit" min="0" max="5000" step="50"></label>
   <label><span>Ancestor depth</span><input type="number" id="ancestorDepth" min="0" max="15" step="1"></label>
 
   <p class="hint" id="status" style="margin-top:10px"></p>
