@@ -82,7 +82,7 @@ size: 640 × 35 px
 position: x 65, y 65 in the viewport · visible
 viewport: 1400 × 1000 @2x · scrolled to 0, 0
 browser: Google Chrome 156.0.8078.80 · macOS 27.0.1
-astro source: /Users/jc/site/src/components/Hero.astro:12:0 (nearest ancestor section.hero)
+astro source: /Users/you/site/src/components/Hero.astro:12:0 (nearest ancestor section.hero)
 marker: data-testid="hero-heading"
 css: #title
 xpath: //*[@id="title"]
@@ -92,8 +92,8 @@ playwright:
   page.locator('#title')
 tag: <h1 class="hero__title text-4xl md:text-6xl" id="title" data-testid="hero-heading">
 ancestors (nearest first):
-  1. section.hero (role region) · 690×197 · /Users/jc/site/src/components/Hero.astro
-  2. main (role main) · 1186×639 · /Users/jc/site/src/pages/index.astro
+  1. section.hero (role region) · 690×197 · /Users/you/site/src/components/Hero.astro
+  2. main (role main) · 1186×639 · /Users/you/site/src/pages/index.astro
 </element-context>
 ```
 
@@ -119,7 +119,6 @@ ancestors (nearest first):
 - Falls back from `navigator.clipboard` to a hidden textarea on non-secure origins. If the document
   isn't focused, the toast turns red and says to click the page once.
 - Nothing is sent anywhere: no background worker, no network, no host permissions.
-- No icons yet, so Chrome shows the default puzzle piece.
 
 ## Testing
 
@@ -128,3 +127,7 @@ See [CLAUDE.md](CLAUDE.md) for the inject-and-dispatch recipe. Quick manual chec
 ```bash
 python3 -m http.server 8899   # then open http://localhost:8899/test/fixture.html
 ```
+
+## License
+
+[MIT](LICENSE) © 2026 Jan Cerny ([JCweb.TECH](https://jcweb.tech))

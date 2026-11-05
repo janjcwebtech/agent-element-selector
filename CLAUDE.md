@@ -26,6 +26,8 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   works on the raw folder.
 - **No background worker.** Opening DevTools from the menu was considered and dropped: Chrome has no
   API for it, and the workaround needs a worker + `devtools_page` for less than ⌥⌘C gives.
+- **Public repo, MIT.** Examples, fixtures and sample output use placeholders (`/Users/you/site`,
+  `site.dev`), never a real username, local path, client site or email.
 
 ## Layout
 
@@ -35,6 +37,7 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
 | `content.js` | Everything. One IIFE, guarded by `window.__agentElementSelectorLoaded`. |
 | `popup.html` / `popup.js` | Settings UI, backed by `chrome.storage.sync`. |
 | `test/fixture.html` | Astro-style source attrs, 8 repeated cards, a 14px icon, a 30-class Tailwind link, a class-less `<p>` with a hostile `title`, a left-edge column. |
+| `icons/` | `icon.svg` is the source; the 16/32/48/128 PNGs are rendered from it with headless Chrome (`--default-background-color=00000000`, `--window-size=N,N`), one native render per size. |
 
 - `content.js` sections, top to bottom: **settings → environment → utils → framework/source metadata →
   element-specific bits → locators → collection → formatting → overlay → menu → clipboard →
