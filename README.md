@@ -7,9 +7,12 @@ Chrome extension for pointing an AI agent at elements on a page.
 - **Hold ⌥ over an element and press ⇧ Shift.** A menu opens next to it. One click copies this
   element, every element with one of its classes or every copy of its component (on **this page**
   or **sitewide**), or full context.
+- **Hold ⌥ and click Edit page (top right).** Retype text in place and pin comments to elements,
+  then **Copy prompt** puts every change into one prompt for your agent. Good for final touches.
 
-It copies identity and location. **Not inner HTML, not computed CSS, not text content.** The agent
-reads styles and copy from your source, and a dump of them only contradicts it.
+References copy identity and location. **Not inner HTML, not computed CSS, not text content.** The
+agent reads styles and copy from your source, and a dump of them only contradicts it. Edit mode is the
+one exception: it copies the before/after of text you changed yourself.
 
 ## Install
 
@@ -52,6 +55,39 @@ menu → component   [elements: all <Card> · src/components/Card.astro:3:1 · s
   describes this page.
 - Refer to several elements in one prompt: *make [element: h1.hero__title · …] match
   [elements: all 8 .card · …]*.
+
+## Edit and comment
+
+| Action | Result |
+| --- | --- |
+| Hold **⌥** → **Edit page** | Toolbar at the top: **Edit text** (V) · **Comment** (C) · × |
+| Edit text: click any text | Type over it, plain text only. **↵** or **Esc** finishes; links and buttons never fire |
+| Comment: click an element | Pin a comment to it. **↵** saves, **⇧↵** new line. Click a pin to edit or delete it |
+| Click an edit's pin | Shows before → after, with **Revert** |
+| **Copy prompt** (bottom bar) | Copies the round, closes edit mode, keeps your edits on screen until you reload |
+| **Esc** | Leaves the text first, then edit mode. Refused while there are uncopied changes |
+
+```text
+<page-edits url="https://site.dev/pricing">
+Make these changes in the source files for this page. Text: replace the before text with …
+
+1. Text · h2.plan__title · //body/main/section[2]/h2
+   source: /Users/you/site/src/components/Plan.astro:12:5
+   before: "Starter plan"
+   after:  "Starter"
+2. Comment · a.btn--primary · //body/main/section[2]/a
+   Make this the same width as the secondary button
+</page-edits>
+```
+
+- Comment pins stay visible in both modes; ⌥-click and the ⌥⇧ menu still work during a round.
+- Long paragraphs are cut to the changed part plus some context either side.
+- **Drafts:** an uncopied round is saved per page. Reload and a bar offers **Restore** or **Discard**;
+  closing the tab with changes asks first.
+- **History:** toolbar icon → **History**, the last 50 copied rounds. **Copy prompt** again,
+  **Show on page** to bring the pins back with a checklist, and tick items done as you check the
+  agent's work (on the page or in the popup).
+- Top frame only. Text inside iframes can't be edited.
 
 ## The menu
 
@@ -115,7 +151,8 @@ ancestors (nearest first):
   `10_15_7` / `NT 10.0` from the user-agent string.
 - Works in iframes; full context flags it.
 - The overlay is a shadow root with `all: initial`, styled like the atx-inspector. Nothing else goes
-  into the page DOM.
+  into the page DOM, except the text you edit and a `contenteditable` on it while you type.
+- Edit rounds and drafts live in `chrome.storage.local`, on your machine only.
 - Falls back from `navigator.clipboard` to a hidden textarea on non-secure origins. If the document
   isn't focused, the toast turns red and says to click the page once.
 - Nothing is sent anywhere: no background worker, no network, no host permissions.
