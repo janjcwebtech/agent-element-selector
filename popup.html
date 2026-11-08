@@ -46,6 +46,28 @@
   .item.done .txt { opacity: .5; text-decoration: line-through; }
   .empty { opacity: .7; font-size: 12px; padding: 12px 0; }
   .foot { display: flex; justify-content: space-between; align-items: center; }
+
+  /* settings */
+  .power { margin: 0 0 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--soft); cursor: pointer; }
+  .power .p-text { display: flex; flex-direction: column; gap: 1px; }
+  .power b { font-size: 13.5px; }
+  .power small { font-size: 12px; opacity: .7; }
+  .power.off small { color: #dc2626; opacity: 1; }
+  .switch { appearance: none; flex: none; width: 36px; height: 20px; margin: 0; border-radius: 999px; position: relative;
+            background: rgba(128,128,128,.45); cursor: pointer; transition: background .15s; }
+  .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%;
+                   background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.3); transition: transform .15s; }
+  .switch:checked { background: #16a34a; }
+  .switch:checked::after { transform: translateX(16px); }
+  .switch:focus-visible { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  #settingsBody.off { opacity: .45; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 5px 10px; margin: 0 0 4px; font-size: 12px; align-items: baseline; }
+  .keys dt { white-space: nowrap; }
+  .keys dd { margin: 0; opacity: .7; }
+  h2 { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; opacity: .6; margin: 14px 0 4px; }
+  .group { border: 1px solid var(--line); border-radius: 8px; padding: 0 10px; }
+  .group label { margin: 0; padding: 7px 0; min-height: 22px; }
+  .group label + label { border-top: 1px solid var(--line); }
 </style>
 </head>
 <body>
@@ -64,31 +86,45 @@
   </section>
 
   <section id="settingsTab" hidden>
-    <p class="hint">Hold <kbd id="keyName">⌥ Option</kbd>, hover, click to copy a reference with the page URL.
-      Press <kbd id="fullKeyName">⇧ Shift</kbd> while holding for a menu: a class or the component, on this page
-      or sitewide, or full context. While holding, <b>Edit page</b> (top right) lets you change text and pin comments,
-      then copy them as one prompt. <kbd>Esc</kbd> cancels.</p>
-
-    <label><input type="checkbox" id="enabled"><span>Enabled</span></label>
-
-    <hr>
-
-    <label><span>Modifier key</span>
-      <select id="modifier">
-        <option value="Alt">⌥ Option / Alt</option>
-        <option value="Control">⌃ Control</option>
-        <option value="Meta">⌘ Command</option>
-        <option value="Shift">⇧ Shift</option>
-      </select>
+    <label class="power">
+      <span class="p-text"><b>Extension Enabled</b><small id="powerNote" hidden>Off on every page</small></span>
+      <input type="checkbox" role="switch" class="switch" id="enabled">
     </label>
 
-    <label><input type="checkbox" id="includeUrl"><span>Include page URL</span></label>
+    <div id="settingsBody">
+      <dl class="keys">
+        <dt><kbd class="k-mod">⌥ Option</kbd> + click</dt><dd>Copy a reference</dd>
+        <dt><kbd class="k-mod">⌥ Option</kbd> + <kbd class="k-menu">⇧ Shift</kbd></dt><dd>Menu: class, component, context</dd>
+        <dt><kbd class="k-mod">⌥ Option</kbd> → <b>Edit page</b></dt><dd>Change text, pin comments</dd>
+        <dt><kbd>Esc</kbd></dt><dd>Cancel</dd>
+      </dl>
 
-    <p class="hint">Full context:</p>
-    <label><input type="checkbox" id="includeAncestors"><span>Include ancestor chain</span></label>
-    <label><span>Ancestor depth</span><input type="number" id="ancestorDepth" min="0" max="15" step="1"></label>
+      <h2>Copying</h2>
+      <div class="group">
+        <label><span>Modifier key</span>
+          <select id="modifier">
+            <option value="Alt">⌥ Option / Alt</option>
+            <option value="Control">⌃ Control</option>
+            <option value="Meta">⌘ Command</option>
+            <option value="Shift">⇧ Shift</option>
+          </select>
+        </label>
+        <label><span>Include page URL</span><input type="checkbox" id="includeUrl"></label>
+      </div>
 
-    <p class="hint" id="status" style="margin-top:10px"></p>
+      <h2>Full context</h2>
+      <div class="group">
+        <label><span>Include ancestor chain</span><input type="checkbox" id="includeAncestors"></label>
+        <label><span>Ancestor depth</span><input type="number" id="ancestorDepth" min="0" max="15" step="1"></label>
+      </div>
+
+      <h2>Edit page</h2>
+      <div class="group">
+        <label><span>Outline on changed text</span><input type="checkbox" id="highlightEdits"></label>
+      </div>
+    </div>
+
+    <p class="hint" id="status" style="margin:8px 0 0; min-height: 1.45em"></p>
   </section>
   <script src="popup.js"></script>
 </body>

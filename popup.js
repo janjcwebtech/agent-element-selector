@@ -4,6 +4,7 @@ const DEFAULTS = {
   includeUrl: true,
   includeAncestors: true,
   ancestorDepth: 5,
+  highlightEdits: false,
 };
 
 const KEY_LABEL = { Alt: '⌥ Option', Control: '⌃ Control', Meta: '⌘ Command', Shift: '⇧ Shift' };
@@ -25,8 +26,15 @@ function write(id, value) {
 
 // Mirrors fullKey() in content.js: Shift opens the menu, unless Shift is the modifier.
 function showKeys(modifier) {
-  $('keyName').textContent = KEY_LABEL[modifier] || modifier;
-  $('fullKeyName').textContent = KEY_LABEL[modifier === 'Shift' ? 'Alt' : 'Shift'];
+  document.querySelectorAll('.k-mod').forEach((k) => { k.textContent = KEY_LABEL[modifier] || modifier; });
+  document.querySelectorAll('.k-menu').forEach((k) => { k.textContent = KEY_LABEL[modifier === 'Shift' ? 'Alt' : 'Shift']; });
+}
+
+// The on/off switch: when off, a note says so and the rest of the settings dim.
+function showPower(on) {
+  $('enabled').closest('.power').classList.toggle('off', !on);
+  $('settingsBody').classList.toggle('off', !on);
+  $('powerNote').hidden = on;
 }
 
 let statusTimer = null;
@@ -40,6 +48,7 @@ chrome.storage.sync.get(DEFAULTS, (stored) => {
   const s = { ...DEFAULTS, ...stored };
   FIELDS.forEach((f) => write(f, s[f]));
   showKeys(s.modifier);
+  showPower(s.enabled);
 });
 
 FIELDS.forEach((f) => {
@@ -47,6 +56,7 @@ FIELDS.forEach((f) => {
     const value = read(f);
     chrome.storage.sync.set({ [f]: value }, () => flash('Saved'));
     if (f === 'modifier') showKeys(value);
+    if (f === 'enabled') showPower(value);
   });
 });
 

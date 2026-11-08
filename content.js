@@ -13,6 +13,7 @@
     includeUrl: true,
     includeAncestors: true,
     ancestorDepth: 5,
+    highlightEdits: false, // dashed box around retyped text; off because it distracts on busy pages
   };
   let settings = { ...DEFAULTS };
 
@@ -25,6 +26,7 @@
       if (area !== 'sync') return;
       for (const [k, { newValue }] of Object.entries(changes)) settings[k] = newValue;
       if (!settings.enabled) { closeMenu(); disarm(); }
+      if (changes.highlightEdits) layoutAll();
     });
   } catch (_) { /* storage unavailable in some contexts */ }
 
@@ -1459,7 +1461,7 @@
       const r = it.el && it.el.getBoundingClientRect();
       const show = !!r && (r.width > 0 || r.height > 0);
       pin.hidden = !show;
-      if (box) box.hidden = !show;
+      if (box) box.hidden = !show || !settings.highlightEdits;
       if (!show) return;
       if (box) placeRect(box, r);
       pin.style.left = Math.round(it.kind === 'edit' ? r.left : r.left + it.rx * r.width) + 'px';

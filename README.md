@@ -82,6 +82,8 @@ Make these changes in the source files for this page. Text: replace the before t
 
 - Comment pins stay visible in both modes; ⌥-click and the ⌥⇧ menu still work during a round.
 - Long paragraphs are cut to the changed part plus some context either side.
+- Changed text gets just its numbered pin. Settings → Edit page → **Outline on changed text** adds a
+  dashed outline around it too.
 - **Drafts:** an uncopied round is saved per page. Reload and a bar offers **Restore** or **Discard**;
   closing the tab with changes asks first.
 - **History:** toolbar icon → **History**, the last 50 copied rounds. **Copy prompt** again,
