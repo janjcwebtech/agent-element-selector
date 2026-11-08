@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Agent Element Selector",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "description": "Hold Option to copy element references for an AI agent, or edit text and pin comments on the page and copy them as one prompt.",
   "icons": {
     "16": "icons/icon-16.png",

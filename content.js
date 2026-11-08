@@ -618,7 +618,8 @@
     .m-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .k-class .m-name, .k-component .m-name { font: 500 12.5px/1.3 var(--atx-font-mono); }
     .m-sub { display: block; font: 400 11.5px/1.35 var(--atx-font-ui); color: var(--atx-muted-fg); overflow: hidden; text-overflow: ellipsis; }
-    .k-full .m-name, .k-full .m-sub { white-space: normal; }
+    .k-full .m-name, .k-full .m-sub, .k-edit .m-name, .k-edit .m-sub { white-space: normal; }
+    .k-edit .m-name > svg { display: inline-block; vertical-align: -2px; margin-right: 6px; }
     .k-disclose .m-name { color: var(--atx-muted-fg); }
     .k-disclose .m-name::before { content: "▸ "; color: var(--atx-faint-fg); }
     .m-status { margin: 6px 4px 0; padding: 8px 6px 2px; border-top: 1px solid var(--atx-border);
@@ -910,7 +911,11 @@
     if (f && !named.length && !util.length && !gen.length) note(`No class contains “${m.filter.trim()}”.`);
     const comp = m.items.find((i) => i.kind === 'component');
     if (comp && ok(comp)) { sec('Component'); addRow(comp); }
-    if (!f) { m.body.append(make('div', 'm-sep')); addRow(m.items.find((i) => i.kind === 'full')); }
+    if (!f) {
+      m.body.append(make('div', 'm-sep'));
+      addRow(m.items.find((i) => i.kind === 'full'));
+      if (TOP) addRow({ kind: 'edit', host: textHost(m.el) });
+    }
 
     m.active = Math.max(0, Math.min(m.active, m.rows.length - 1));
     placeMenu();
@@ -951,6 +956,12 @@
       const pageStatus = it.n === 1 ? `Copies ${what}; only this element has it here.` : `Copies all ${it.n} ${what} on this page.`;
       row.append(name, copyButton(pageLabel, pageUrl() || 'This page', () => act(it, 'page'), pageStatus, idx));
       if (site) row.append(copyButton('sitewide', location.origin, () => act(it, 'site'), `Copies every ${what} across ${domain}.`, idx));
+    } else if (it.kind === 'edit') {
+      name.append(icon('edit'), 'Edit text');
+      name.append(make('span', 'm-sub', it.host ? 'Type over this element’s text, in edit mode' : 'No text here: opens edit mode, then click any text'));
+      row.append(name);
+      row.classList.add('clickable');
+      row.addEventListener('click', () => act(it, 'page'));
     } else if (it.kind === 'full') {
       name.textContent = 'Full context';
       name.append(make('span', 'm-sub', 'Size, position, viewport, browser, source, locators, ancestors…'));
@@ -989,6 +1000,7 @@
       m.status.textContent = {
         element: settings.includeUrl ? 'This element, plus the page URL.' : 'This element only.',
         full: 'Copied between start and end tags, marked as page data.',
+        edit: 'Starts a review round: retype text, pin comments, copy one prompt.',
         disclose: 'Tailwind-style utilities, folded so the named classes stay on top.',
       }[it.kind];
     }
@@ -1001,6 +1013,7 @@
     closeMenu();
     if (it.kind === 'element') doCopy(target);
     else if (it.kind === 'full') copyFull(target);
+    else if (it.kind === 'edit') editFrom(target);
     else {
       const text = toGroupRef(it, s);
       const what = it.kind === 'class' ? `.${it.cls}` : `<${it.name}>`;
@@ -1309,7 +1322,7 @@
   // parents that sit in running text, so `<p>Hello <b>world</b></p>` edits as one paragraph.
   function textHost(el) {
     if (!el || el.nodeType !== 1 || el === host) return null;
-    const existing = review.items.find((i) => i.kind === 'edit' && i.el && i.el.contains(el));
+    const existing = (review?.items || []).find((i) => i.kind === 'edit' && i.el && i.el.contains(el));
     if (existing) return existing.el;
     if (el instanceof SVGElement || /^(INPUT|TEXTAREA|SELECT|OPTION|IMG|VIDEO|AUDIO|CANVAS|IFRAME|HTML|BODY|SCRIPT|STYLE)$/.test(el.tagName)) return null;
     const ownText = (n) => Array.from(n.childNodes).some((c) => c.nodeType === 3 && c.nodeValue.trim());
@@ -1327,6 +1340,22 @@
     el.addEventListener('input', onEditInput);
     el.addEventListener('focusout', onEditEnd);
     review.editing = el;
+  }
+
+  // The menu's Edit text row: edit mode with the caret at the end of this element's text, or
+  // just edit mode when there's no text here to type over.
+  function editFrom(el) {
+    startReview('edit');
+    if (!review) return;
+    const h = el.isConnected && textHost(el);
+    if (!h) { showToast('Edit mode on', 'Click any text to change it'); return; }
+    beginEdit(h);
+    h.focus({ preventScroll: true });
+    const sel = window.getSelection(), range = document.createRange();
+    range.selectNodeContents(h);
+    range.collapse(false);
+    sel.removeAllRanges();
+    sel.addRange(range);
   }
 
   function onEditInput(e) {

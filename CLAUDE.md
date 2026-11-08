@@ -6,7 +6,7 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   lands on the clipboard, for dropping mid-sentence into a prompt.
 - Hold ⌥ over an element and press ⇧ → a menu opens there (no click). One-click buttons copy this
   element, one of its classes (`[elements: all 12 .card · URL]`) or its component, on this page or
-  sitewide; the Full context row copies the long block.
+  sitewide; the Full context row copies the long block; Edit text starts edit mode on it (`editFrom`).
 - Hold ⌥ → **Edit page** (top right) → review round: retype text in place (V), pin comments to
   elements (C), **Copy prompt** → one `<page-edits>` block. Rounds go to the popup's History.
 
@@ -63,7 +63,7 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   `showKeys()` in `popup.js` must agree.
 - **The menu opens on the key press that completes modifier + ⇧** (`completes` in the keydown
   handler), not on a click; ⌥⇧-click is the fallback. Pressing ⇧ again over another element moves it.
-- **Rows act only through their buttons** (`copyButton`); Full context and the utility disclosure are
+- **Rows act only through their buttons** (`copyButton`); Full context, Edit text and the utility disclosure are
   whole-row clicks. The user chose one-click buttons over a scope toggle and dropped ↑↓/↵ navigation.
 - **sitewide** = `act(it, 'site')` → `ref(kind, body, 'site')` → `· site-wide · <origin>`, no count
   (it only describes this page). Hidden when `includeUrl` is off or the origin is `null` (file:, srcdoc).

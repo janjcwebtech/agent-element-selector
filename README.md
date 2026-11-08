@@ -6,7 +6,7 @@ Chrome extension for pointing an AI agent at elements on a page.
   clipboard, ready to drop mid-sentence into a prompt.
 - **Hold ⌥ over an element and press ⇧ Shift.** A menu opens next to it. One click copies this
   element, every element with one of its classes or every copy of its component (on **this page**
-  or **sitewide**), or full context.
+  or **sitewide**), or full context. **Edit text** jumps straight into editing that element.
 - **Hold ⌥ and click Edit page (top right).** Retype text in place and pin comments to elements,
   then **Copy prompt** puts every change into one prompt for your agent. Good for final touches.
 
@@ -32,8 +32,9 @@ one exception: it copies the before/after of text you changed yourself.
 
 - The menu stays open after you let go of the keys.
 - The page never sees an armed click.
-- Toolbar icon → enable/disable, swap the modifier (⌥ ⌃ ⌘ ⇧), include the page URL, and set the
-  ancestor chain and its depth for full context. With ⇧ as the modifier, ⌥ opens the menu.
+- Toolbar icon → **Settings**: the **Extension Enabled** switch, the modifier (⌥ ⌃ ⌘ ⇧), include the
+  page URL, the ancestor chain and its depth for full context, and **Outline on changed text**.
+  With ⇧ as the modifier, ⌥ opens the menu.
 
 ## What gets copied
 
@@ -105,6 +106,8 @@ Make these changes in the source files for this page. Text: replace the before t
 - **Component:** every element rendered from the same source line, using Astrogeus `data-atx-*` or
   Astro dev's `data-astro-source-*` attributes. Same two buttons.
 - **Full context:** click the row for the block below.
+- **Edit text:** opens edit mode with the caret already in this element's text. On an element with
+  no text it just opens edit mode; click any text to change it.
 - **sitewide** buttons are hidden when "Include page URL" is off, and on `file:` pages.
 - Placement: left of the element by default, then right, below or above; at the pointer when the
   element covers most of the view. It never leaves the screen; a long list scrolls inside it.
