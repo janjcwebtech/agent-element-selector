@@ -121,6 +121,8 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   `history` (≤50 rounds, newest first, `done` per item), `pendingReplay` (round for a tab the popup opens).
 - Replay: popup → `chrome.tabs.sendMessage(frameId 0, {type:'aes:replay', round})`; the page answers
   `ok` / `url` / `busy`. No `tabs` permission: the content script checks the URL (origin + path).
+- Replay panel filter (`replay.filter`, `replayShows`) appears only when the round mixes edits and comments; it
+  hides rows and pins but keeps the round's numbering and the `N / M done` count.
 - Top frame only (`TOP`). `beforeunload` warns while a round has items.
 
 ## Verifying a change

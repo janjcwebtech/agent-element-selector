@@ -86,7 +86,8 @@ Make these changes in the source files for this page. Text: replace the before t
   closing the tab with changes asks first.
 - **History:** toolbar icon → **History**, the last 50 copied rounds. **Copy prompt** again,
   **Show on page** to bring the pins back with a checklist, and tick items done as you check the
-  agent's work (on the page or in the popup).
+  agent's work (on the page or in the popup). A round with both kinds gets an All · Text · Comments
+  filter on top of the checklist.
 - Top frame only. Text inside iframes can't be edited.
 
 ## The menu

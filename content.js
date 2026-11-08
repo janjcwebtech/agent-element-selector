@@ -694,6 +694,13 @@
     .p-row.done .p-note, .p-row.done del, .p-row.done ins { opacity: .5; }
     .p-miss { font: 400 11.5px/1.3 var(--atx-font-ui); color: var(--atx-warning); }
     .p-foot { display: flex; gap: 6px; padding: 8px 4px 2px; margin-top: 4px; border-top: 1px solid var(--atx-border); }
+    .p-filter { display: flex; gap: 2px; padding: 2px; margin: 0 4px 6px; border-radius: var(--atx-radius-md); background: var(--atx-control-bg); border: 1px solid var(--atx-border); }
+    .p-filter button { flex: 1; height: 26px; padding: 0 8px; border: 0; border-radius: var(--atx-radius-sm); background: transparent;
+      color: var(--atx-muted-fg); font: 500 12px/1 var(--atx-font-ui); cursor: pointer; }
+    .p-filter button:hover { color: var(--atx-foreground); }
+    .p-filter button.on { background: var(--atx-accent); color: var(--atx-foreground); }
+    .p-filter .n { margin-left: 5px; font: 11px/1 var(--atx-font-mono); color: var(--atx-faint-fg); font-variant-numeric: tabular-nums; }
+    .p-empty { padding: 14px 10px; font: 400 12.5px/1.4 var(--atx-font-ui); color: var(--atx-muted-fg); }
   `;
 
   let host = null, shadow = null, box = null, badge = null, toast = null, edgeUp = null, edgeDown = null, matchLayer = null, cursorStyle = null;
@@ -1114,7 +1121,7 @@
 
   let review = null;     // { mode: 'edit'|'comment', url, items, editing, composer }
   let reviewUi = null;   // { tb, bar, barText, layer, hover }
-  let replay = null;     // { round, items, layer, panel, list, progress, flash }
+  let replay = null;     // { round, items, layer, panel, list, progress, flash, filter: 'all' | 'edit' | 'comment' }
   let entryBtn = null, entryTimer = null;
   let sideBar = null;    // bottom notice outside a review: restore a draft / prompt copied
   const originals = new WeakMap();   // edited element → { before, nodes } from before its first edit
@@ -1468,6 +1475,7 @@
     if (review) { drawPins(reviewUi.layer, review.items, pickReviewItem); placeComposer(); }
     if (replay) {
       drawPins(replay.layer, replay.items, (it) => focusReplayItem(replay.items.indexOf(it)));
+      for (const it of replay.items) if (!replayShows(it)) { if (it._pin) it._pin.hidden = true; if (it._box) it._box.hidden = true; }
       const f = replay.flash;
       if (f && Date.now() < f.until && f.el.isConnected) drawBox(f.el);
       else if (f) { replay.flash = null; if (!armed && !menu) hideHighlight(); }
@@ -1651,7 +1659,7 @@
     stopReplay();
     closeSideBar();
     ensureOverlay();
-    replay = { round, items: round.items.map((s) => ({ ...s, el: findEl(s) })), flash: null };
+    replay = { round, items: round.items.map((s) => ({ ...s, el: findEl(s) })), flash: null, filter: 'all' };
     buildReplayUi();
     syncTicker();
   }
@@ -1665,9 +1673,23 @@
     r.progress = make('span', 'm-size');
     head.append(make('span', 'p-title', 'Round · ' + fmtTime(r.round.created)), r.progress, button('m-close', '×', () => stopReplay(), 'Close'));
     r.list = make('div', 'p-list');
+    // Filter only when the round mixes text edits and comments.
+    const count = (k) => r.items.filter((x) => x.kind === k).length;
+    r.filterBar = null;
+    if (count('edit') && count('comment')) {
+      r.filterBar = make('div', 'p-filter');
+      r.filterBar.setAttribute('role', 'group');
+      r.filterBar.setAttribute('aria-label', 'Show');
+      for (const [key, name, n] of [['all', 'All', r.items.length], ['edit', 'Text', count('edit')], ['comment', 'Comments', count('comment')]]) {
+        const b = button(null, null, () => { r.filter = key; renderReplay(); });
+        b.dataset.f = key;
+        b.append(name, make('span', 'n', String(n)));
+        r.filterBar.append(b);
+      }
+    } else r.filter = 'all';
     const foot = make('div', 'p-foot');
     foot.append(button('btn', 'Copy prompt again', async () => { if (await copyText(r.round.prompt)) showToast('Prompt copied'); else copyFailed(); }));
-    panel.append(head, r.list, foot);
+    panel.append(...[head, r.filterBar, r.list, foot].filter(Boolean));
     r.layer = make('div');
     r.panel = panel;
     shadow.append(r.layer, panel);
@@ -1678,7 +1700,10 @@
   function renderReplay() {
     const r = replay;
     r.list.replaceChildren();
+    for (const b of r.filterBar?.children || []) { b.classList.toggle('on', b.dataset.f === r.filter); b.setAttribute('aria-pressed', String(b.dataset.f === r.filter)); }
     r.items.forEach((it, i) => {
+      it._row = null;
+      if (!replayShows(it)) return;
       const row = make('div', 'p-row' + (it.done ? ' done' : ''));
       const cb = make('input');
       cb.type = 'checkbox';
@@ -1696,12 +1721,16 @@
       r.list.append(row);
       it._row = row;
     });
+    if (!r.list.children.length) r.list.append(make('div', 'p-empty', 'Nothing of this kind in the round'));
     r.progress.textContent = `${r.items.filter((x) => x.done).length} / ${r.items.length} done`;
     layoutAll();
   }
 
+  const replayShows = (it) => replay.filter === 'all' || it.kind === replay.filter;
+
   function focusReplayItem(i) {
     const it = replay.items[i];
+    if (!replayShows(it)) { replay.filter = 'all'; renderReplay(); }
     for (const x of replay.items) x._row?.classList.toggle('on', x === it);
     it._row?.scrollIntoView({ block: 'nearest' });
     if (!it.el || !it.el.isConnected) it.el = findEl(it);
