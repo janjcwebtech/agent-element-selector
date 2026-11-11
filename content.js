@@ -653,7 +653,9 @@
       font-family: var(--atx-font-ui); font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer;
       transition: background 120ms, border-color 120ms, color 120ms; }
     /* Hover inverts to the emphatic fill (near-white, dark ink): the one click that copies. */
-    .m-row.k-edit .m-btn, .m-row.k-comment .m-btn { min-width: 136px; }   /* the two Tools buttons line up */
+    .m-row.k-edit .m-btn, .m-row.k-comment .m-btn { min-width: 150px; }   /* the two Tools buttons line up */
+    .m-btn.has-icon { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
+    .m-btn.has-icon svg { flex: none; }
     .m-row .m-btn:hover { background: var(--atx-primary); border-color: var(--atx-primary); color: var(--atx-primary-fg); }
     .m-filter { width: 100%; height: 32px; margin: 4px 0; padding: 0 10px; font: 400 12.5px/1 var(--atx-font-mono); }
     .m-body { position: relative; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
@@ -1034,6 +1036,13 @@
     return b;
   }
 
+  // Tools buttons carry the toolbar's mode icon, so the menu and the segmented control read as one.
+  function withIcon(b, name) {
+    b.classList.add('has-icon');
+    b.prepend(icon(name));
+    return b;
+  }
+
   // Every row acts only through its buttons; the utility disclosure alone is a whole-row click.
   function addRow(it) {
     const m = menu, idx = m.rows.length;
@@ -1056,13 +1065,13 @@
       if (site) row.append(copyButton('Sitewide', location.origin, () => act(it, 'site'), `Copies every ${what} across ${domain}.`, idx));
     } else if (it.kind === 'edit') {
       name.textContent = 'Edit text';
-      row.append(name, copyButton(it.host ? 'Start editing' : 'Open Edit text', 'Edit text', () => act(it, 'page'),
+      row.append(name, withIcon(copyButton(it.host ? 'Start editing' : 'Open Edit text', 'Edit text', () => act(it, 'page'),
         it.host ? 'Opens the toolbar in Edit text with the caret in this element’s text.'
-          : 'No text here: opens the toolbar in Edit text, then click any text.', idx));
+          : 'No text here: opens the toolbar in Edit text, then click any text.', idx), MODES.edit.icon));
     } else if (it.kind === 'comment') {
       name.textContent = 'Add comment';
-      row.append(name, copyButton('Start commenting', 'Add comment', () => act(it, 'page'),
-        'Opens the toolbar in Comment with a note pinned to this element.', idx));
+      row.append(name, withIcon(copyButton('Start commenting', 'Add comment', () => act(it, 'page'),
+        'Opens the toolbar in Comment with a note pinned to this element.', idx), MODES.comment.icon));
     } else if (it.kind === 'full') {
       name.textContent = 'Full context';
       row.append(name, copyButton('Copy context', 'Full context', () => act(it, 'page'),

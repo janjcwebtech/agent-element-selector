@@ -10,6 +10,7 @@ Not released. Being tested and adjusted before it ships as 2.x.
 ### Added
 
 - Menu → **Tools → Add comment**: opens the toolbar in Comment with the comment box on the element.
+  - Both Tools buttons carry the toolbar's Edit text / Comment icon.
 - **On-page toolbar**, shown and hidden with the extension icon, laid out like the Claude artifact view.
   - Page title on the left opens **History**.
   - One segmented control for the mode: **Use the page · Select element (S) · Edit text (V) · Comment (C)**.
