@@ -851,15 +851,18 @@
 
   function drawBox(target) {
     ensureOverlay();
-    const r = target.getBoundingClientRect();
-    placeRect(box, r);
+    const r = target.getBoundingClientRect(), { w, h } = view();
+    // Same air as the text boxes, but never pushed off-screen, so a full-width element keeps its ring.
+    const left = Math.max(0, r.left - TEXT_PAD), top = Math.max(0, r.top - TEXT_PAD);
+    const right = Math.min(w, r.right + TEXT_PAD), bottom = Math.min(h, r.bottom + TEXT_PAD);
+    placeRect(box, { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) });
     box.hidden = false;
     box.classList.toggle('tiny', r.width < 20 || r.height < 20);
-    return r;
+    return { r, top, bottom };
   }
 
   function highlight(target, hint) {
-    const r = drawBox(target);
+    const { r, top, bottom } = drawBox(target);
     const glyph = KEY_GLYPH[fullKey()];
     badge.hidden = false;
     badge.classList.toggle('full', fullMode && !hint);
@@ -869,7 +872,7 @@
       make('span', 'b-hint', hint || (fullMode ? `click or press ${glyph} again for the menu` : `click copies · press ${glyph} for the menu`)));
     const { w, h } = view();
     badge.style.left = Math.max(4, Math.min(r.left, w - badge.offsetWidth - 4)) + 'px';
-    badge.style.top = (r.top > 30 ? r.top - 30 : Math.min(r.bottom + 6, h - 30)) + 'px';
+    badge.style.top = (top > 30 ? top - 30 : Math.min(bottom + 6, h - 30)) + 'px';
   }
 
   function hideHighlight() {
@@ -1885,7 +1888,7 @@
     const c = review?.composer;
     if (!c) return;
     if (!c.el || !c.el.isConnected) { closeComposer(); return; }
-    const r = drawBox(c.el);
+    const { r } = drawBox(c.el);
     const { w, h } = view();
     const px = r.left + c.rx * r.width, py = r.top + c.ry * r.height;
     const cw = c.node.offsetWidth, ch = c.node.offsetHeight;

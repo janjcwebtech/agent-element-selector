@@ -25,6 +25,8 @@ Not released. Being tested and adjusted before it ships as 2.x.
 ### Changed
 
 - The toolbar popup is gone; History and Settings live on the page.
+- The selection ring (⌥-hover, Select and Comment modes) sits 4px outside the element, like the
+  edit-text ring, so it no longer touches the text inside.
 - **Edit page** (the pill shown while holding ⌥) is replaced by the toolbar. The menu's **Edit text**
   row opens the toolbar in Edit text.
 - A round lasts as long as the toolbar, not the edit mode: pins stay visible and clickable in every mode.

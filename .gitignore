@@ -5,3 +5,4 @@ node_modules/
 .env.*
 .claude/settings.local.json
 VSCODE_PORT_PLAN.md
+.playwright-mcp/
