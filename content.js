@@ -581,6 +581,7 @@
     /* Marks on the page: dark ink with a light halo, so they read on light and on dark pages alike. */
     .box, .mbox, .hbox, .ebox { position: fixed; box-sizing: border-box; pointer-events: none; border-radius: var(--atx-radius-sm); }
     .box { border: 2px solid var(--atx-ink); box-shadow: 0 0 0 1.5px var(--atx-halo), 0 6px 20px rgb(0 0 0 / .22); }
+    .box.glide { transition: left 200ms ease-out, top 200ms ease-out, width 200ms ease-out, height 200ms ease-out; }
     .box.tiny { box-shadow: 0 0 0 2px var(--atx-halo), 0 0 0 5px rgb(27 27 26 / .35); }
     .mbox { border: 1px solid rgb(27 27 26 / .9); box-shadow: 0 0 0 1px rgb(255 255 255 / .75); background: rgb(128 128 128 / .18); }
     .hbox { border: 1px solid rgb(27 27 26 / .6); box-shadow: 0 0 0 1px rgb(255 255 255 / .6); }
@@ -848,6 +849,7 @@
   const TEXT_PAD = 4;
 
   let fullMode = false;
+  let boxTarget = null;   // element the ring was last drawn on, so drawBox knows whether to glide
 
   function drawBox(target) {
     ensureOverlay();
@@ -855,7 +857,13 @@
     // Same air as the text boxes, but never pushed off-screen, so a full-width element keeps its ring.
     const left = Math.max(0, r.left - TEXT_PAD), top = Math.max(0, r.top - TEXT_PAD);
     const right = Math.min(w, r.right + TEXT_PAD), bottom = Math.min(h, r.bottom + TEXT_PAD);
+    // Glide only from one element to another; appearing, scrolling and resizing snap, or the ring lags the page.
+    const glide = !box.hidden && boxTarget && boxTarget !== target;
+    boxTarget = target;
+    if (!glide) { box.classList.remove('glide'); void box.offsetWidth; }
     placeRect(box, { left, top, width: Math.max(0, right - left), height: Math.max(0, bottom - top) });
+    if (!glide) void box.offsetWidth;
+    box.classList.toggle('glide', !matchMedia('(prefers-reduced-motion: reduce)').matches);
     box.hidden = false;
     box.classList.toggle('tiny', r.width < 20 || r.height < 20);
     return { r, top, bottom };
