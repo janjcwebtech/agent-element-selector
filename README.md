@@ -12,7 +12,7 @@ Chrome extension for pointing an AI agent at elements on a page.
   URL lands on your clipboard, ready to drop mid-sentence into a prompt.
 - **Hold ⌥ over an element and press ⇧ Shift.** A menu opens next to it. One click copies this
   element, every element with one of its classes or every copy of its component (on **this page**
-  or **sitewide**), or full context. **Edit text** jumps straight into editing that element.
+  or **sitewide**), or full context. **Edit text** and **Add comment** start a round on that element.
 
 References copy identity and location. **Not inner HTML, not computed CSS, not text content.** The
 agent reads styles and copy from your source, and a dump of them only contradicts it. The one
@@ -56,7 +56,7 @@ Click the extension icon to show or hide it. Left to right:
 | **⌥ + ⇧** over an element | Opens the menu there, no click needed. ⌥⇧-click works too |
 | **⇧** again over another element | Moves the menu to it |
 | Hover a row | Outlines every match on the page |
-| Click a button | Copies and closes. **N on this page** → this URL; **sitewide** → the whole domain |
+| Click a button | Copies and closes. **This Page** → this URL; **Sitewide** → the whole domain |
 | **Esc**, or a click outside | Closes the menu; that click never reaches the page |
 
 - The menu stays open after you let go of the keys.
@@ -130,20 +130,25 @@ Make these changes in the source files for this page. Text: replace the before t
 
 ## The menu
 
-- **This element → Copy context:** the same reference as ⌥-click.
-- **Classes:** in source order, each with two buttons: **N on this page** (or *only this*) and
-  **sitewide**. Clicking the row itself does nothing; hovering a button says what it copies.
-  - Hovering a row outlines every match; matches out of view show as ↑ / ↓ counters at the edge.
-  - *only this* means no other element on this page has it.
+- Four groups, divided by a line: **Element**, **Classes**, **Component**, **Tools**. Every row acts
+  through its button; clicking the row itself does nothing, hovering a button says what it copies.
+- **Element:**
+  - **This element → Copy context:** the same reference as ⌥-click.
+  - **Full context → Copy context:** the block below.
+- **Classes:** in source order, each with **This Page** and **Sitewide**.
+  - Hovering a row outlines every match and counts them in the status line; matches out of view
+    show as ↑ / ↓ counters at the edge.
   - On an element that also has named classes, more than 4 Tailwind-style utilities fold into one row.
   - A filter box appears past 8 classes.
   - Generated names (`svelte-…`, `css-…`, CSS-module hashes) get a warning: a rebuild renames them.
 - **Component:** every element rendered from the same source line, using Astrogeus `data-atx-*` or
   Astro dev's `data-astro-source-*` attributes. Same two buttons.
-- **Full context:** click the row for the block below.
-- **Edit text:** opens the toolbar in Edit text with the caret already in this element's text. On an
-  element with no text it just switches mode; click any text to change it.
-- **sitewide** buttons are hidden when "Include page URL" is off, and on `file:` pages.
+- **Tools:**
+  - **Edit text → Start editing:** opens the toolbar in Edit text with the caret already in this
+    element's text. On an element with no text it just switches mode; click any text to change it.
+  - **Add comment → Start commenting:** opens the toolbar in Comment with the comment box on this
+    element, pinned where the pointer was.
+- **Sitewide** buttons are hidden when "Include page URL" is off, and on `file:` pages.
 - Placement: left of the element by default, then right, below or above; at the pointer when the
   element covers most of the view. It never leaves the screen; a long list scrolls inside it.
 

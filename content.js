@@ -643,33 +643,31 @@
     kbd { font: 500 11px/1 var(--atx-font-mono); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--atx-input); color: var(--atx-foreground); }
 
     /* The menu: header, sections of 36px rows, a status line. */
-    .menu { position: fixed; width: 344px; max-width: calc(100vw - 16px); display: flex; flex-direction: column; padding: 6px;
+    .menu { position: fixed; width: 410px; max-width: calc(100vw - 16px); display: flex; flex-direction: column; padding: 8px;
       outline: none; cursor: auto; }
-    .m-head { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 2px 2px 6px 10px; margin-bottom: 2px;
+    .m-head { display: flex; align-items: center; gap: 8px; min-height: 28px; padding: 2px 2px 6px 0; margin-bottom: 2px;
       border-bottom: 1px solid var(--atx-border); }
-    .m-label { flex: 1; min-width: 0; font: 500 12px/1.3 var(--atx-font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .m-label { flex: 1; min-width: 0; font: 500 13px/1.3 var(--atx-font-mono); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .m-size { flex: none; font: 11px/1 var(--atx-font-mono); color: var(--atx-faint-fg); font-variant-numeric: tabular-nums; }
     .m-btn { flex: none; box-sizing: border-box; border: 1px solid var(--atx-input); background: var(--atx-control-bg); color: var(--atx-foreground);
       font-family: var(--atx-font-ui); font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; cursor: pointer;
       transition: background 120ms, border-color 120ms, color 120ms; }
     /* Hover inverts to the emphatic fill (near-white, dark ink): the one click that copies. */
+    .m-row.k-edit .m-btn, .m-row.k-comment .m-btn { min-width: 136px; }   /* the two Tools buttons line up */
     .m-row .m-btn:hover { background: var(--atx-primary); border-color: var(--atx-primary); color: var(--atx-primary-fg); }
     .m-filter { width: 100%; height: 32px; margin: 4px 0; padding: 0 10px; font: 400 12.5px/1 var(--atx-font-mono); }
     .m-body { position: relative; overflow-y: auto; min-height: 0; flex: 1 1 auto; overscroll-behavior: contain; }
     .m-sec { font: 500 11.5px/1 var(--atx-font-ui); color: var(--atx-faint-fg); padding: 10px 10px 6px; }
     .m-sec.warn { color: var(--atx-warning); }
     .m-note { font: 400 12.5px/1.45 var(--atx-font-ui); color: var(--atx-muted-fg); padding: 6px 10px; }
-    .m-sep { height: 1px; background: var(--atx-border); margin: 6px 0; }
+    .m-div { flex: none; height: 1px; margin: 16px 2px 0; background: var(--atx-border); }
     .m-row { display: flex; align-items: center; gap: 8px; min-height: 36px; padding: 5px 5px 5px 10px; box-sizing: border-box;
       border-radius: var(--atx-radius-md); cursor: default; }
     .m-row.clickable { cursor: pointer; }
     .m-row.on { background: var(--atx-accent); }
-    .m-row > svg { align-self: flex-start; margin: 3px 2px 0 0; color: var(--atx-muted-fg); }
-    .m-row.on > svg { color: var(--atx-foreground); }
     .m-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .k-class .m-name, .k-component .m-name { font: 500 12.5px/1.3 var(--atx-font-mono); }
     .m-sub { display: block; margin-top: 1px; font: 400 12px/1.4 var(--atx-font-ui); color: var(--atx-muted-fg); overflow: hidden; text-overflow: ellipsis; }
-    .k-full .m-name, .k-full .m-sub, .k-edit .m-name, .k-edit .m-sub { white-space: normal; }
     .k-disclose .m-name { color: var(--atx-muted-fg); }
     .k-disclose .m-name::before { content: "▸ "; color: var(--atx-faint-fg); }
     .m-status { margin-top: 6px; padding: 8px 10px 4px; border-top: 1px solid var(--atx-border);
@@ -997,7 +995,11 @@
     const pick = (g) => classes.filter((i) => i.group === g && ok(i));
     const named = pick('named'), util = pick('utility'), gen = pick('generated');
 
-    if (!f) { sec('Element'); addRow(m.items[0]); }
+    // Groups (Element · Classes · Component · Tools), a divider between each pair that shows.
+    let groups = 0;
+    const group = () => { if (groups++) m.body.append(make('div', 'm-div')); };
+    if (!f) { group(); sec('Element'); addRow(m.items[0]); addRow(m.items.find((i) => i.kind === 'full')); }
+    group();
     if (!classes.length) note('No classes on this element.');
     if (named.length) { sec(classes.length > named.length ? 'Named classes' : 'Classes'); named.forEach(addRow); }
     if (util.length) {
@@ -1008,11 +1010,11 @@
     if (gen.length) { sec('Generated · renamed on rebuild', 'warn'); gen.forEach(addRow); }
     if (f && !named.length && !util.length && !gen.length) note(`No class contains “${m.filter.trim()}”.`);
     const comp = m.items.find((i) => i.kind === 'component');
-    if (comp && ok(comp)) { sec('Component'); addRow(comp); }
-    if (!f) {
-      m.body.append(make('div', 'm-sep'));
-      addRow(m.items.find((i) => i.kind === 'full'));
-      if (TOP) addRow({ kind: 'edit', host: textHost(m.el) });
+    if (comp && ok(comp)) { group(); sec('Component'); addRow(comp); }
+    if (!f && TOP) {
+      group(); sec('Tools');
+      addRow({ kind: 'edit', host: textHost(m.el) });
+      addRow({ kind: 'comment' });
     }
 
     m.active = Math.max(0, Math.min(m.active, m.rows.length - 1));
@@ -1032,8 +1034,7 @@
     return b;
   }
 
-  // Element / class / component rows act only through their buttons; Full context and the
-  // utility disclosure are whole-row actions.
+  // Every row acts only through its buttons; the utility disclosure alone is a whole-row click.
   function addRow(it) {
     const m = menu, idx = m.rows.length;
     const row = make('div', 'm-row k-' + it.kind);
@@ -1050,21 +1051,22 @@
         name.textContent = what;
         name.append(make('span', 'm-sub', it.self ? it.path : `${it.path} · contains this`));
       } else name.textContent = it.text;
-      const pageLabel = it.n === 1 ? 'only this' : `${it.n} on this page`;
       const pageStatus = it.n === 1 ? `Copies ${what}; only this element has it here.` : `Copies all ${it.n} ${what} on this page.`;
-      row.append(name, copyButton(pageLabel, pageUrl() || 'This page', () => act(it, 'page'), pageStatus, idx));
-      if (site) row.append(copyButton('sitewide', location.origin, () => act(it, 'site'), `Copies every ${what} across ${domain}.`, idx));
+      row.append(name, copyButton('This Page', pageUrl() || 'This page', () => act(it, 'page'), pageStatus, idx));
+      if (site) row.append(copyButton('Sitewide', location.origin, () => act(it, 'site'), `Copies every ${what} across ${domain}.`, idx));
     } else if (it.kind === 'edit') {
-      name.append('Edit text', make('span', 'm-sub', it.host ? 'Type over this element’s text' : 'No text here: switches to Edit text, then click any text'));
-      row.append(icon('edit', 15), name);
-      row.classList.add('clickable');
-      row.addEventListener('click', () => act(it, 'page'));
+      name.textContent = 'Edit text';
+      row.append(name, copyButton(it.host ? 'Start editing' : 'Open Edit text', 'Edit text', () => act(it, 'page'),
+        it.host ? 'Opens the toolbar in Edit text with the caret in this element’s text.'
+          : 'No text here: opens the toolbar in Edit text, then click any text.', idx));
+    } else if (it.kind === 'comment') {
+      name.textContent = 'Add comment';
+      row.append(name, copyButton('Start commenting', 'Add comment', () => act(it, 'page'),
+        'Opens the toolbar in Comment with a note pinned to this element.', idx));
     } else if (it.kind === 'full') {
       name.textContent = 'Full context';
-      name.append(make('span', 'm-sub', 'Size, position, viewport, browser, source, locators, ancestors…'));
-      row.append(icon('context', 15), name);
-      row.classList.add('clickable');
-      row.addEventListener('click', () => act(it, 'page'));
+      row.append(name, copyButton('Copy context', 'Full context', () => act(it, 'page'),
+        'Copies the long block between start and end tags, marked as page data.', idx));
     } else {
       name.textContent = it.text;
       row.append(name);
@@ -1096,8 +1098,9 @@
       clearMatches();
       m.status.textContent = {
         element: settings.includeUrl ? 'This element, plus the page URL.' : 'This element only.',
-        full: 'Copied between start and end tags, marked as page data.',
-        edit: 'Opens the toolbar in Edit text: retype text, pin comments, copy one prompt.',
+        full: 'Size, position, viewport, browser, source, locators, ancestors…',
+        edit: it.host ? 'Type over this element’s text.' : 'No text here: switches to Edit text, then click any text.',
+        comment: 'Pin a comment to this element for the next prompt.',
         disclose: 'Tailwind-style utilities, folded so the named classes stay on top.',
       }[it.kind];
     }
@@ -1106,11 +1109,12 @@
   function act(it, s) {
     const m = menu;
     if (it.kind === 'disclose') { m.expanded = true; renderMenu(); return; }
-    const target = m.el;
+    const target = m.el, point = m.point;
     closeMenu();
     if (it.kind === 'element') doCopy(target);
     else if (it.kind === 'full') copyFull(target);
     else if (it.kind === 'edit') editFrom(target);
+    else if (it.kind === 'comment') commentFrom(target, point);
     else {
       const text = toGroupRef(it, s);
       const what = it.kind === 'class' ? `.${it.cls}` : `<${it.name}>`;
@@ -1793,6 +1797,16 @@
     range.collapse(false);
     sel.removeAllRanges();
     sel.addRange(range);
+  }
+
+  // Menu → Add comment: Comment mode with the composer open on this element, pinned where the
+  // pointer was (the element's centre when the pointer is outside it).
+  function commentFrom(el, point) {
+    openBar('comment');
+    if (!toolbar || !el.isConnected) return;
+    const r = el.getBoundingClientRect();
+    const inside = point && point.x >= r.left && point.x <= r.right && point.y >= r.top && point.y <= r.bottom;
+    openComposer(el, inside ? point : { x: r.left + r.width / 2, y: r.top + r.height / 2 });
   }
 
   function onEditInput(e) {

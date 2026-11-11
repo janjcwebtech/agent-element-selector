@@ -9,6 +9,7 @@ Not released. Being tested and adjusted before it ships as 2.x.
 
 ### Added
 
+- Menu → **Tools → Add comment**: opens the toolbar in Comment with the comment box on the element.
 - **On-page toolbar**, shown and hidden with the extension icon, laid out like the Claude artifact view.
   - Page title on the left opens **History**.
   - One segmented control for the mode: **Use the page · Select element (S) · Edit text (V) · Comment (C)**.
@@ -31,6 +32,10 @@ Not released. Being tested and adjusted before it ships as 2.x.
   resize and when it first appears. Off under *reduce motion*.
 - **Edit page** (the pill shown while holding ⌥) is replaced by the toolbar. The menu's **Edit text**
   row opens the toolbar in Edit text.
+- Menu regrouped: **Element** (this element, full context) · **Classes** · **Component** · **Tools**,
+  with a line between groups. Every row acts through its button; descriptions moved to the status line.
+  - Class and component buttons read **This Page** / **Sitewide**; the count shows on hover.
+  - Wider (410px).
 - A round lasts as long as the toolbar, not the edit mode: pins stay visible and clickable in every mode.
 - After **Copy prompt** the toolbar stays open and returns to *Use the page*.
 - Esc steps back to *Use the page*; S / V / C only act outside it, so the page keeps its own shortcuts.

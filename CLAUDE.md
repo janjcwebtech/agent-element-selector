@@ -6,7 +6,7 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   lands on the clipboard, for dropping mid-sentence into a prompt.
 - Hold ⌥ over an element and press ⇧ → a menu opens there (no click). One-click buttons copy this
   element, one of its classes (`[elements: all 12 .card · URL]`) or its component, on this page or
-  sitewide; the Full context row copies the long block; Edit text starts edit mode on it (`editFrom`).
+  sitewide; Full context copies the long block; Tools start Edit text (`editFrom`) or a comment (`commentFrom`) on it.
 - Toolbar icon → a toolbar docks on the page, laid out like the Claude artifact chrome: title
   (History dropdown) left; the Use / Select / Edit / Comment segmented control, Design, Settings right.
 - A round = text retyped in place (V), comments pinned to elements (C), `:root` variables changed in
@@ -78,8 +78,7 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   alone opens it.
 - **The menu opens on the key press that completes modifier + ⇧** (`completes` in the keydown
   handler), not on a click; ⌥⇧-click is the fallback. Pressing ⇧ again over another element moves it.
-- **Rows act only through their buttons** (`copyButton`); Full context, Edit text and the utility disclosure are
-  whole-row clicks. The user chose one-click buttons over a scope toggle and dropped ↑↓/↵ navigation.
+- **Rows act only through their buttons** (`copyButton`); only the utility disclosure is a whole-row click. The user chose one-click buttons over a scope toggle and dropped ↑↓/↵ navigation.
 - **sitewide** = `act(it, 'site')` → `ref(kind, body, 'site')` → `· site-wide · <origin>`, no count
   (it only describes this page). Hidden when `includeUrl` is off or the origin is `null` (file:, srcdoc).
 - **The menu outlives the keys.** `disarm()` leaves it open; Esc, a button, or a click outside closes it.
@@ -91,7 +90,10 @@ Personal Chrome MV3 extension for pointing an AI agent at page elements.
   smooth-scroll libraries eating `wheel`). Page *capture* listeners on `window` still see them.
 - **Keys typed into the filter get `stopImmediatePropagation`.** Events leave the shadow root
   retargeted to the host `<div>`, so page hotkey libraries don't see an input and would fire.
-- **Menu rows:** classes in source order; the count lives in the "N on this page" button. Utilities fold into one row only
+- **Menu groups:** Element (this element, full context) · Classes · Component · Tools (edit, comment), an
+  `.m-div` line between groups that show. Buttons read **This Page** / **Sitewide**; the match count
+  lives in the status line, not the button.
+- **Menu rows:** classes in source order. Utilities fold into one row only
   when the element also has named classes; a filter box appears past 8 classes; `GENERATED_CLASS`
   names get a warning section.
 - **Component row = same source location**: elements sharing `data-atx-file`+`data-atx-loc` (Astrogeus)
@@ -183,7 +185,7 @@ window.dispatchEvent(new MouseEvent('mousemove', o));
 window.dispatchEvent(new MouseEvent('mousedown', o));                  // ⌥-click → __copied
 window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Shift', altKey: true, shiftKey: true }));
 const menu = document.querySelector('[data-agent-element-selector]').shadowRoot.querySelector('.menu');
-menu.querySelector('.m-row.k-full').dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
+menu.querySelector('.m-row.k-full .m-btn').dispatchEvent(new MouseEvent('click', { bubbles: true, composed: true }));
 ```
 
 - **Real sites:** CSP blocks the injected `<script>`; with Playwright use `page.evaluate(src)` instead.
