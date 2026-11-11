@@ -1,4 +1,5 @@
 // Fake chrome.* for injecting content.js as a plain script; storage.local persists in sessionStorage.
+// The toolbar icon: window.__onMessage({ type: 'aes:toggle' }, null, () => {}).
 (() => {
   window.__copied = [];
   Object.defineProperty(navigator, 'clipboard', {
@@ -25,5 +26,5 @@
     },
   };
   window.chrome = { runtime: { lastError: null, onMessage: { addListener(f) { window.__onMessage = f; } } },
-    storage: { local, sync: { get: (d, cb) => cb({ ...d }) }, onChanged: { addListener: (f) => listeners.push(f) } } };
+    storage: { local, sync: { get: (d, cb) => cb({ ...d }), set: (_o, cb) => cb && cb() }, onChanged: { addListener: (f) => listeners.push(f) } } };
 })();

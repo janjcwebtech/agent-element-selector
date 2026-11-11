@@ -1,8 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Agent Element Selector",
-  "version": "1.4.3",
-  "description": "Hold Option to copy element references for an AI agent, or edit text and pin comments on the page and copy them as one prompt.",
+  "version": "2.0.0",
+  "version_name": "2.0.0-rc.1",
+  "description": "Point an AI agent at page elements: select them, edit text, pin comments and copy it all as one prompt, from a toolbar on the page.",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
@@ -13,6 +14,9 @@
     "storage",
     "clipboardWrite"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "content_scripts": [
     {
       "matches": [
@@ -26,8 +30,7 @@
     }
   ],
   "action": {
-    "default_title": "Agent Element Selector",
-    "default_popup": "popup.html",
+    "default_title": "Agent Element Selector: show or hide the toolbar",
     "default_icon": {
       "16": "icons/icon-16.png",
       "32": "icons/icon-32.png",

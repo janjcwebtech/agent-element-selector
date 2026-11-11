@@ -2,28 +2,57 @@
 
 Chrome extension for pointing an AI agent at elements on a page.
 
-- **Hold ⌥ Option, hover, click.** A short reference to the element and the page URL lands on your
-  clipboard, ready to drop mid-sentence into a prompt.
+> **2.0.0-rc.1, release candidate.** This branch (`v2-rc`) is being tested before it ships as 2.x;
+> `main` holds 1.4.3. What changed: [CHANGELOG.md](CHANGELOG.md).
+
+- **Click the extension icon.** A toolbar docks on the page, laid out like the Claude artifact view:
+  use the page, select elements, retype text in place, pin comments, try design-token values.
+  **Copy prompt** puts every change into one prompt for your agent. Good for final touches.
+- **Hold ⌥ Option, hover, click.** No toolbar needed: a short reference to the element and the page
+  URL lands on your clipboard, ready to drop mid-sentence into a prompt.
 - **Hold ⌥ over an element and press ⇧ Shift.** A menu opens next to it. One click copies this
   element, every element with one of its classes or every copy of its component (on **this page**
   or **sitewide**), or full context. **Edit text** jumps straight into editing that element.
-- **Hold ⌥ and click Edit page (top right).** Retype text in place and pin comments to elements,
-  then **Copy prompt** puts every change into one prompt for your agent. Good for final touches.
 
 References copy identity and location. **Not inner HTML, not computed CSS, not text content.** The
-agent reads styles and copy from your source, and a dump of them only contradicts it. Edit mode is the
-one exception: it copies the before/after of text you changed yourself.
+agent reads styles and copy from your source, and a dump of them only contradicts it. The one
+exception is what you changed yourself: the before/after of retyped text and of design tokens.
 
 ## Install
 
 `chrome://extensions` → **Developer mode** on → **Load unpacked** → pick this folder → reload open tabs.
 
-## Use
+After pulling a newer version: **Reload** on the extension's card, then reload open tabs.
+
+## The toolbar
+
+Click the extension icon to show or hide it. Left to right:
+
+| Control | What it does |
+| --- | --- |
+| **Page title ▾** | **History**: the last 50 copied rounds |
+| **Use the page** | The page works as usual; pins stay visible |
+| **Select element** (S) | Hover and click to copy a reference, **⇧** for the menu. No key to hold |
+| **Edit text** (V) | Click any text and type over it |
+| **Comment** (C) | Click an element to pin a comment to it |
+| **Design** | Experimental: change the page's `:root` CSS variables live |
+| **Settings** | A centered dialog; see below |
+| **×** | Closes the toolbar. Refused while a round has uncopied changes |
+
+- Once a round has changes, a bar at the bottom of the page offers **Discard** and **Copy prompt**.
+- **Esc** steps back to *Use the page*. The S / V / C keys only work outside it, so the page keeps
+  its own shortcuts.
+- The toolbar overlays the top 48px of the page. Settings → **Position** moves it to the bottom.
+- **Settings:** toolbar position, the **Hold the modifier to select** switch and its key (⌥ ⌃ ⌘ ⇧),
+  include the page URL, the ancestor chain and its depth for full context, and **Outline on changed
+  text**. With ⇧ as the modifier, ⌥ opens the menu. Settings sync across your Chrome profile.
+
+## Quick select, without the toolbar
 
 | Action | Result |
 | --- | --- |
-| Hold **⌥** | Purple ring + a badge with the element's label and size follows the cursor |
-| **⌥-click** | Copies the element reference; toast says *Copied element + URL* |
+| Hold **⌥** | A ring + a badge with the element's label and size follows the cursor |
+| **⌥-click** | Copies the element reference; a toast says *Copied element + URL* |
 | **⌥ + ⇧** over an element | Opens the menu there, no click needed. ⌥⇧-click works too |
 | **⇧** again over another element | Moves the menu to it |
 | Hover a row | Outlines every match on the page |
@@ -32,9 +61,7 @@ one exception: it copies the before/after of text you changed yourself.
 
 - The menu stays open after you let go of the keys.
 - The page never sees an armed click.
-- Toolbar icon → **Settings**: the **Extension Enabled** switch, the modifier (⌥ ⌃ ⌘ ⇧), include the
-  page URL, the ancestor chain and its depth for full context, and **Outline on changed text**.
-  With ⇧ as the modifier, ⌥ opens the menu.
+- Works in every tab, toolbar open or not. Settings → **Hold the modifier to select** turns it off.
 
 ## What gets copied
 
@@ -57,16 +84,18 @@ menu → component   [elements: all <Card> · src/components/Card.astro:3:1 · s
 - Refer to several elements in one prompt: *make [element: h1.hero__title · …] match
   [elements: all 8 .card · …]*.
 
-## Edit and comment
+## Edit, comment, design
+
+Everything you change on a page is one **round**, copied as one prompt.
 
 | Action | Result |
 | --- | --- |
-| Hold **⌥** → **Edit page** | Toolbar at the top: **Edit text** (V) · **Comment** (C) · × |
-| Edit text: click any text | Type over it, plain text only. **↵** or **Esc** finishes; links and buttons never fire |
-| Comment: click an element | Pin a comment to it. **↵** saves, **⇧↵** new line. Click a pin to edit or delete it |
+| **Edit text**: click any text | Type over it, plain text only. **↵** or **Esc** finishes; links and buttons never fire |
+| **Comment**: click an element | Pin a comment to it. **↵** saves, **⇧↵** new line. Click a pin to edit or delete it |
 | Click an edit's pin | Shows before → after, with **Revert** |
-| **Copy prompt** (bottom bar) | Copies the round, closes edit mode, keeps your edits on screen until you reload |
-| **Esc** | Leaves the text first, then edit mode. Refused while there are uncopied changes |
+| **Design**: type a new value | Previews the variable on the page and adds it to the round |
+| **Copy prompt** (bottom bar) | Copies the round and saves it to History; your changes stay on screen until you reload |
+| **Discard** | Puts every text and variable back and deletes the comments |
 
 ```text
 <page-edits url="https://site.dev/pricing">
@@ -78,19 +107,25 @@ Make these changes in the source files for this page. Text: replace the before t
    after:  "Starter"
 2. Comment · a.btn--primary · //body/main/section[2]/a
    Make this the same width as the secondary button
+3. Design token · --color-brand
+   before: "#6144d7"
+   after:  "#4f35c9"
 </page-edits>
 ```
 
-- Comment pins stay visible in both modes; ⌥-click and the ⌥⇧ menu still work during a round.
+- Pins stay visible in every mode; ⌥-click and the ⌥⇧ menu still work during a round.
 - Long paragraphs are cut to the changed part plus some context either side.
-- Changed text gets just its numbered pin. Settings → Edit page → **Outline on changed text** adds a
-  dashed outline around it too.
+- Changed text gets just its numbered pin. Settings → **Outline on changed text** adds a dashed
+  outline around it too.
+- **Design** lists the variables declared on `:root`; stylesheets from another origin can't be read.
 - **Drafts:** an uncopied round is saved per page. Reload and a bar offers **Restore** or **Discard**;
   closing the tab with changes asks first.
-- **History:** toolbar icon → **History**, the last 50 copied rounds. **Copy prompt** again,
-  **Show on page** to bring the pins back with a checklist, and tick items done as you check the
-  agent's work (on the page or in the popup). A round with both kinds gets an All · Text · Comments
-  filter on top of the checklist.
+- **History:** click the page title in the toolbar. **Copy prompt** again, or **Show on page** to
+  bring the pins back with a checklist and tick items done as you check the agent's work. A round
+  from another page gets **Open page**, which opens it in a new tab with the checklist. A round with
+  text and comments gets an All · Text · Comments filter on top.
+- **Design is experimental.** It joins the round like any other change; the agent is told to change
+  the variable where it is defined.
 - Top frame only. Text inside iframes can't be edited.
 
 ## The menu
@@ -106,8 +141,8 @@ Make these changes in the source files for this page. Text: replace the before t
 - **Component:** every element rendered from the same source line, using Astrogeus `data-atx-*` or
   Astro dev's `data-astro-source-*` attributes. Same two buttons.
 - **Full context:** click the row for the block below.
-- **Edit text:** opens edit mode with the caret already in this element's text. On an element with
-  no text it just opens edit mode; click any text to change it.
+- **Edit text:** opens the toolbar in Edit text with the caret already in this element's text. On an
+  element with no text it just switches mode; click any text to change it.
 - **sitewide** buttons are hidden when "Include page URL" is off, and on `file:` pages.
 - Placement: left of the element by default, then right, below or above; at the pointer when the
   element covers most of the view. It never leaves the screen; a long list scrolls inside it.
@@ -155,13 +190,18 @@ ancestors (nearest first):
 
 - Browser / OS comes from UA Client Hints, so macOS and Windows versions are real, not the frozen
   `10_15_7` / `NT 10.0` from the user-agent string.
-- Works in iframes; full context flags it.
-- The overlay is a shadow root with `all: initial`, styled like the atx-inspector. Nothing else goes
-  into the page DOM, except the text you edit and a `contenteditable` on it while you type.
+- Quick select works in iframes; full context flags it. The toolbar is top frame only.
+- Rings and pins are dark with a light halo, so they show on light and on dark pages.
+- The overlay is a shadow root with `all: initial`. Nothing else goes into the page DOM, except
+  what you change: the text you edit (and a `contenteditable` on it while you type) and the
+  variables you set, inline on `<html>`.
 - Edit rounds and drafts live in `chrome.storage.local`, on your machine only.
 - Falls back from `navigator.clipboard` to a hidden textarea on non-secure origins. If the document
-  isn't focused, the toast turns red and says to click the page once.
-- Nothing is sent anywhere: no background worker, no network, no host permissions.
+  isn't focused, the toast shows a red dot and says to click the page once.
+- Nothing is sent anywhere: no network, no host permissions. The background worker only passes the
+  icon click to the page.
+- Tabs that were open before you installed or reloaded the extension need a reload before the icon
+  does anything; `chrome://` pages and the Web Store never get the toolbar.
 
 ## Testing
 
