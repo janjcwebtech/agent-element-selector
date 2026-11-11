@@ -762,6 +762,8 @@
     .set + .set { border-top: 1px solid var(--atx-border); }
     .set-name small { display: block; font: 400 12px/1.4 var(--atx-font-ui); color: var(--atx-muted-fg); }
     .in { flex: none; height: 28px; padding: 0 8px; border-color: var(--atx-input); font: 400 13px/1 var(--atx-font-ui); }
+    select.in { appearance: none; padding-right: 30px; background-repeat: no-repeat; background-position: right 10px center;
+      background-size: 12px; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a3a3a3' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); }
     input.in[type=number] { width: 64px; }
     .switch { appearance: none; -webkit-appearance: none; flex: none; position: relative; width: 36px; height: 20px; margin: 0; border-radius: 999px;
       background: rgb(255 255 255 / .2); cursor: pointer; transition: background 150ms; outline: none; }
